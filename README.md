@@ -64,7 +64,7 @@ Create a `.env` file in the backend directory:
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/sweetshop
+MONGODB_URI=mongodb+srv://mayankmanitripathi04_db_user:lW8S1e2xy8edfKCQ@cluster0.7zaouoc.mongodb.net/?appName=Cluster0
 JWT_SECRET=your_super_secret_key_change_this_in_production
 NODE_ENV=development
 ```
@@ -370,7 +370,7 @@ Incubyte/
 ### Backend (.env)
 ```env
 PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/sweetshop
+MONGODB_URI=mongodb+srv://mayankmanitripathi04_db_user:lW8S1e2xy8edfKCQ@cluster0.7zaouoc.mongodb.net/?appName=Cluster0
 JWT_SECRET=your_super_secret_key_change_this
 NODE_ENV=development
 ```
@@ -441,14 +441,3 @@ lsof -ti:5000 | xargs kill -9
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
-
-This project is created as part of an assignment. Feel free to use it for educational purposes.
-
-## Support
-
-For any issues or questions, please create an issue in the repository or contact the maintainer.
-
----
-
-**Built with ❤️ using the MERN Stack**

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import SweetCard from '../components/SweetCard';
-import { getAllSweets, searchSweets } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import { getAllSweets, searchSweets, updateSweet, deleteSweet } from '../services/api';
 import './Home.css';
 
 const Home = () => {
+  const { user } = useContext(AuthContext);
   const [sweets, setSweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useState({
@@ -11,6 +13,16 @@ const Home = () => {
     category: '',
     minPrice: '',
     maxPrice: ''
+  });
+  const [showModal, setShowModal] = useState(false);
+  const [editingSweet, setEditingSweet] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'Chocolate',
+    price: '',
+    quantity: '',
+    description: '',
+    imageUrl: ''
   });
 
   const categories = ['All', 'Chocolate', 'Candy', 'Gummy', 'Hard Candy', 'Lollipop', 'Other'];
@@ -55,6 +67,60 @@ const Home = () => {
       maxPrice: ''
     });
     fetchSweets();
+  };
+
+  const handleEdit = (sweet) => {
+    setEditingSweet(sweet);
+    setFormData({ ...sweet });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this sweet?')) return;
+    try {
+      await deleteSweet(id);
+      alert('Sweet deleted successfully!');
+      fetchSweets();
+    } catch (error) {
+      alert(error.response?.data?.error || 'Delete failed');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSweet(editingSweet._id, formData);
+      alert('Sweet updated successfully!');
+      resetForm();
+      fetchSweets();
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Update failed';
+      alert('Error: ' + errorMsg);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      category: 'Chocolate',
+      price: '',
+      quantity: '',
+      description: '',
+      imageUrl: ''
+    });
+    setEditingSweet(null);
+    setShowModal(false);
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   useEffect(() => {
@@ -117,11 +183,118 @@ const Home = () => {
                 key={sweet._id}
                 sweet={sweet}
                 onUpdate={fetchSweets}
+                onEdit={handleEdit}
+                onDelete={() => handleDelete(sweet._id)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {showModal && user?.role === 'admin' && (
+        <div className="modal-overlay" onClick={resetForm}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Sweet</h2>
+
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Sweet Name *</label>
+                <input
+                  placeholder="Enter sweet name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {categories.filter(c => c !== 'All').map(c => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Price ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Quantity *</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  placeholder="Enter sweet description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Sweet Image</label>
+                <div className="image-input-group">
+                  <input
+                    type="url"
+                    placeholder="Paste image URL or upload below"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  />
+                  <div className="file-upload-wrapper">
+                    <label htmlFor="file-upload-home" className="file-upload-label">
+                      📷 Choose Image
+                    </label>
+                    <input
+                      id="file-upload-home"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                </div>
+                {formData.imageUrl && (
+                  <div className="image-preview">
+                    <img src={formData.imageUrl} alt="Preview" />
+                  </div>
+                )}
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-submit">
+                  Update Sweet
+                </button>
+                <button type="button" onClick={resetForm} className="btn-cancel">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

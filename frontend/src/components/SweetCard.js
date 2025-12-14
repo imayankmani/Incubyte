@@ -68,28 +68,41 @@ const SweetCard = ({ sweet, onUpdate, onDelete, onEdit }) => {
               </>
             ) : (
               <>
-                <div className="quantity-selector">
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={isOutOfStock}
-                  >
-                    -
-                  </button>
-                  <span>{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(Math.min(sweet.quantity, quantity + 1))}
-                    disabled={isOutOfStock}
-                  >
-                    +
-                  </button>
-                </div>
-                <button
-                  onClick={handlePurchase}
-                  disabled={isOutOfStock || purchasing}
-                  className="btn-purchase"
-                >
-                  {purchasing ? '...' : '🛒 Buy'}
-                </button>
+                {token ? (
+                  <>
+                    <div className="quantity-selector">
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={isOutOfStock}
+                      >
+                        -
+                      </button>
+                      <span>{quantity}</span>
+                      <button 
+                        onClick={() => setQuantity(Math.min(sweet.quantity, quantity + 1))}
+                        disabled={isOutOfStock}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      onClick={handlePurchase}
+                      disabled={isOutOfStock || purchasing}
+                      className="btn-purchase"
+                    >
+                      {purchasing ? '...' : '🛒 Buy'}
+                    </button>
+                  </>
+                ) : (
+                  <div className="login-required">
+                    <button 
+                      onClick={() => window.location.href = '/login'}
+                      className="btn-login-required"
+                    >
+                      🔒 Login to Purchase
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>

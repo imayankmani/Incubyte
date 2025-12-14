@@ -19,7 +19,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    const user = new User({ username, email, password, role: role || 'user' });
+    const userRole = role || 'user';
+    const user = new User({ username, email, password, role: userRole });
     await user.save();
 
     const token = generateToken(user._id);
@@ -48,8 +49,8 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

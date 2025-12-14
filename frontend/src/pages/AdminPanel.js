@@ -47,13 +47,18 @@ const AdminPanel = () => {
         await updateSweet(editingSweet._id, formData);
         alert('Sweet updated');
       } else {
-        await createSweet(formData);
-        alert('Sweet added');
+        console.log('Submitting sweet data:', formData);
+        const response = await createSweet(formData);
+        console.log('Response:', response);
+        alert('Sweet added successfully!');
       }
       resetForm();
       fetchSweets();
     } catch (err) {
-      alert(err.response?.data?.error || 'Operation failed');
+      console.error('Error details:', err);
+      console.error('Error response:', err.response);
+      const errorMsg = err.response?.data?.error || err.message || 'Operation failed';
+      alert('Error: ' + errorMsg);
     }
   };
 
@@ -109,7 +114,7 @@ const AdminPanel = () => {
               onEdit={handleEdit}
               onDelete={() => handleDelete(sweet._id)}
             />
-            <button onClick={() => handleRestock(sweet._id)}>📦 Restock</button>
+            <button className="btn-restock" onClick={() => handleRestock(sweet._id)}>📦 Restock</button>
           </div>
         ))}
       </div>
@@ -120,53 +125,104 @@ const AdminPanel = () => {
             <h2>{editingSweet ? 'Edit Sweet' : 'Add Sweet'}</h2>
 
             <form onSubmit={handleSubmit}>
-              <input
-                placeholder="Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
+              <div className="form-group">
+                <label>Sweet Name *</label>
+                <input
+                  placeholder="Enter sweet name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
 
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              >
-                {categories.map(c => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
+              <div className="form-group">
+                <label>Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {categories.map(c => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                type="number"
-                placeholder="Price"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                required
-              />
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Price ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <input
-                type="number"
-                placeholder="Quantity"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                required
-              />
+                <div className="form-group">
+                  <label>Quantity *</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
 
-              <textarea
-                placeholder="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  rows="4"
+                  placeholder="Enter sweet description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
 
-              <input
-                placeholder="Image URL"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              />
+              <div className="form-group">
+                <label>Sweet Image</label>
+                <div className="image-input-group">
+                  <input
+                    type="url"
+                    placeholder="Paste image URL or upload below"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  />
+                  <div className="file-upload-wrapper">
+                    <label htmlFor="file-upload" className="file-upload-label">
+                      📷 Choose Image
+                    </label>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData({ ...formData, imageUrl: reader.result });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                  {formData.imageUrl && (
+                    <div className="image-preview">
+                      <img src={formData.imageUrl} alt="Preview" />
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">Save</button>
-                <button type="button" onClick={resetForm}>Cancel</button>
+                <button className="btn-submit" type="submit">Save</button>
+                <button className="btn-cancel" type="button" onClick={resetForm}>Cancel</button>
               </div>
             </form>
           </div>

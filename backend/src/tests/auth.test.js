@@ -3,17 +3,19 @@ const app = require('../app');
 const User = require('../models/User');
 
 describe('Auth Endpoints', () => {
-  beforeEach(async () => {
-    await User.deleteMany({});
-  });
+
+  beforeAll(async () => {
+    // Clean only once before all auth tests
+    await User.deleteMany({ email: { $regex: '@authtests\.com$' } });
+  }, 10000);
 
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
       const res = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
-          email: 'test@example.com',
+          username: 'testuser1',
+          email: 'testuser1@authtests.com',
           password: 'password123',
           role: 'user'
         });
@@ -23,19 +25,23 @@ describe('Auth Endpoints', () => {
     });
 
     it('should not register user with existing email', async () => {
-      await request(app)
+      // First registration
+      const firstRes = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
-          email: 'test@example.com',
+          username: 'duplicate1',
+          email: 'duplicate@authtests.com',
           password: 'password123'
         });
+      
+      expect(firstRes.statusCode).toBe(201);
 
+      // Try to register with same email
       const res = await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser2',
-          email: 'test@example.com',
+          username: 'duplicate2',
+          email: 'duplicate@authtests.com',
           password: 'password456'
         });
 
@@ -48,15 +54,15 @@ describe('Auth Endpoints', () => {
       await request(app)
         .post('/api/auth/register')
         .send({
-          username: 'testuser',
-          email: 'test@example.com',
+          username: 'loginuser',
+          email: 'loginuser@authtests.com',
           password: 'password123'
         });
 
       const res = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'loginuser@authtests.com',
           password: 'password123'
         });
 

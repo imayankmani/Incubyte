@@ -6,7 +6,14 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// Sweets API
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const getAllSweets = () => api.get('/sweets');
 export const searchSweets = (params) => api.get('/sweets/search', { params });
 export const createSweet = (data) => api.post('/sweets', data);

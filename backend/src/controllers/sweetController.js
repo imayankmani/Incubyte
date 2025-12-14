@@ -22,21 +22,27 @@ exports.getAllSweets = async (req, res) => {
 exports.searchSweets = async (req, res) => {
   try {
     const { name, category, minPrice, maxPrice } = req.query;
-    let query = {};
+    const searchQuery = {};
 
     if (name) {
-      query.name = { $regex: name, $options: 'i' };
+      searchQuery.name = { $regex: name, $options: 'i' };
     }
+    
     if (category) {
-      query.category = category;
+      searchQuery.category = category;
     }
+    
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      searchQuery.price = {};
+      if (minPrice) {
+        searchQuery.price.$gte = Number(minPrice);
+      }
+      if (maxPrice) {
+        searchQuery.price.$lte = Number(maxPrice);
+      }
     }
 
-    const sweets = await Sweet.find(query);
+    const sweets = await Sweet.find(searchQuery);
     res.json(sweets);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -77,18 +83,26 @@ exports.deleteSweet = async (req, res) => {
 
 exports.purchaseSweet = async (req, res) => {
   try {
-    const { quantity = 1 } = req.body;
+    const requestedQuantity = req.body.quantity || 1;
+    
+    if (requestedQuantity <= 0) {
+      return res.status(400).json({ error: 'Invalid quantity' });
+    }
+    
     const sweet = await Sweet.findById(req.params.id);
     
     if (!sweet) {
       return res.status(404).json({ error: 'Sweet not found' });
     }
     
-    if (sweet.quantity < quantity) {
-      return res.status(400).json({ error: 'Insufficient quantity in stock' });
+    if (sweet.quantity < requestedQuantity) {
+      return res.status(400).json({ 
+        error: 'Insufficient quantity in stock',
+        available: sweet.quantity
+      });
     }
     
-    sweet.quantity -= quantity;
+    sweet.quantity -= requestedQuantity;
     await sweet.save();
     
     res.json({ 
@@ -102,9 +116,9 @@ exports.purchaseSweet = async (req, res) => {
 
 exports.restockSweet = async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const restockQuantity = req.body.quantity;
     
-    if (!quantity || quantity <= 0) {
+    if (!restockQuantity || restockQuantity <= 0) {
       return res.status(400).json({ error: 'Invalid quantity' });
     }
     
@@ -114,7 +128,7 @@ exports.restockSweet = async (req, res) => {
       return res.status(404).json({ error: 'Sweet not found' });
     }
     
-    sweet.quantity += quantity;
+    sweet.quantity += restockQuantity;
     await sweet.save();
     
     res.json({ 

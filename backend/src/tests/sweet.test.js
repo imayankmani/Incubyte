@@ -8,6 +8,10 @@ describe('Sweet Endpoints', () => {
   let userToken;
 
   beforeAll(async () => {
+    // Clean up existing users
+    await User.deleteMany({});
+    await Sweet.deleteMany({});
+    
     // Create admin user
     const adminRes = await request(app)
       .post('/api/auth/register')
@@ -17,6 +21,10 @@ describe('Sweet Endpoints', () => {
         password: 'admin123',
         role: 'admin'
       });
+    
+    if (!adminRes.body.token) {
+      throw new Error('Failed to create admin user');
+    }
     adminToken = adminRes.body.token;
 
     // Create regular user
@@ -27,12 +35,16 @@ describe('Sweet Endpoints', () => {
         email: 'user@example.com',
         password: 'user123'
       });
+    
+    if (!userRes.body.token) {
+      throw new Error('Failed to create regular user');
+    }
     userToken = userRes.body.token;
-  });
+  }, 10000);
 
   beforeEach(async () => {
     await Sweet.deleteMany({});
-  });
+  }, 10000);
 
   describe('POST /api/sweets', () => {
     it('should allow admin to create sweet', async () => {
